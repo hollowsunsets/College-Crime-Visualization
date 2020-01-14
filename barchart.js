@@ -1,63 +1,12 @@
-const datasets = {
-    'criminal': './data/criminal.csv',
-    'VAWA': './data/VAWA.csv',
-    'hatecrimes': './data/hatecrimes.csv',
-    'arrest': './data/arrest.csv'
-};
-
-const columnMargin = {
-    top: 20,
-    right: 20,
-    bottom: 30, 
-    left: 50
-};
-
-const columnWidth = 550 - columnMargin.left - columnMargin.right;
-const columnHeight = 400 - columnMargin.top - columnMargin.bottom;
-
-const color =  d3.scaleOrdinal()
+function makeBarchart() {
+    var color =  d3.scaleOrdinal()
                     .range(['#66a61e', '#dd4477', '#fec44f'])
 
-const updateChart = function(filename) {
-    d3.csv(filename, (data, index, columns) => {
-        for (let i = 2, size = columns.length; i < size; i++) {
-            data[columns[i]] = +data[columns[i]];
-        }
-        return data;
-    }, (error, data) => {
-        drawChart(data, false);
-    });
-}
-
-const drawLegend = function() {
-    const legend = svg.selectAll(".legend")
-            .data(keys.slice())
-            .enter().append("g")
-            .attr("class", "legend")
-            .attr("transform", (data, index) => "translate(0," + index * 20 + ")"; })
-            .on("click", (data) => drawViz(d, false))
-
-    legend.append("rect")
-        .attr("x", columnWidth)
-        .attr("width", 18)
-        .attr("height", 18)
-        .style("fill", color)
-    
-    legend.append("text")
-        .attr("x", columnWidth - 10)
-        .attr("y", 9)
-        .attr("dy", ".32em")
-        .style("text-anchor", "end")
-        .text((data) => data; )
-}
-
-function makeBarchart() {
-    
-    
-    
-
+    var columnData;
     var keys;
-   
+    var columnMargin = {top: 20, right: 20, bottom: 30, left: 50},
+    columnWidth = 550 - columnMargin.left - columnMargin.right,
+    columnHeight = 400 - columnMargin.top - columnMargin.bottom;
   
     var svg = d3.select('#area').append('svg')
                                 .attr('width', columnWidth + columnMargin.left + columnMargin.right)
@@ -85,18 +34,43 @@ function makeBarchart() {
   
     var yAxis = d3.axisLeft()
                   .scale(y);
-        
-    d3.selectAll('select')
-            .on('change', () => {
-                const subject = this.value;
-                var filename = datasets[subject];
-                if (subject == 'hatecrimes' || subject == 'criminal') {
-                    d3.select('.text-muted').style("visibility", "visible");
-                } else {
-                    d3.select('.text-muted').style("visibility", "hidden");
-                }
-                updateChart(filename);
-    });
+
+    // read in data
+    d3.csv('./data/arrest.csv', function(d, i, columns) {
+        for (var i = 2, n = columns.length; i< n; i++) d[columns[i]] = +d[columns[i]];
+        return d;
+      }, function(error, data) {
+        if (error) throw error;
+        columnData = data;
+        //initial viz
+        drawChart(columnData, false);
+      });
+    
+      d3.selectAll('select')
+      .on('change', function() {
+        var selected = this.value;
+        var file;
+        if (selected == 'criminal') {
+          file = './data/criminal.csv';
+          d3.select('.text-muted').style("visibility", "visible");
+        } else if (selected == 'VAWA') {
+          file = './data/VAWA.csv';
+          d3.select('.text-muted').style("visibility", "visible");
+        } else if (selected == 'hatecrimes') {
+          file = './data/hatecrimes.csv';
+          d3.select('.text-muted').style("visibility", "hidden");
+        } else {
+          file = './data/arrest.csv'; //on start
+          d3.select('.text-muted').style("visibility", "hidden");
+        }
+        d3.csv(file, function(d, i, columns) {
+          for (var i = 2, n = columns.length; i< n; i++) d[columns[i]] = +d[columns[i]];
+          return d;
+        }, function(error, data) {
+          if (error) throw error;
+          drawChart(data, true);
+        })
+      });
     
       function drawChart(data, update) {
         // get year headers
@@ -201,7 +175,32 @@ function makeBarchart() {
             .attr('class', 'yaxis')
             .call(yAxis);
           }
-        }    
+        }
+    
+        function drawLegend() {
+          var legend = svg.selectAll(".legend")
+              .data(keys.slice())
+              .enter().append("g")
+              .attr("class", "legend")
+              .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; })
+              .on("click", function (d) {
+                drawViz(d, false)
+              })
+    
+          legend.append("rect")
+            .attr("x", columnWidth)
+            .attr("width", 18)
+            .attr("height", 18)
+            .style("fill", color);
+    
+          legend.append("text")
+            .attr("x", columnWidth - 10)
+            .attr("y", 9)
+            .attr("dy", ".32em")
+            .style("text-anchor", "end")
+            .text(function(d) { return d; });
+        }
+    
+   
 }
-
 makeBarchart();
