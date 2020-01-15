@@ -37,10 +37,10 @@ var nest = d3.nest()
 d3.csv("./data/total.csv", function(error,data) {
   if (error) throw error;
   dataset = data;
-  draw(2012, true);
+  drawViz(2012, true);
 });
 
-function drawSunburstChart(year, first) {
+function drawViz(year, first) {
 
   initializeBreadcrumbTrail();
   //get all years
@@ -242,5 +242,5 @@ function drawSunburstChart(year, first) {
   // Respond to radio click.
   d3.selectAll('.year').on("click", function change() {
     var year = this.value;
-    drawSunburstChart(year,false);
+    drawViz(year,false);
   });
